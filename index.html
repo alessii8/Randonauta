@@ -95,6 +95,45 @@
     50%{opacity:0.25;}
   }
 
+  .signal-bars{
+    display:flex;
+    gap:2px;
+    align-items:flex-end;
+    height:12px;
+    justify-content:flex-end;
+    margin-top:6px;
+  }
+  .signal-bars span{
+    width:2.5px;
+    background:var(--signal);
+    opacity:0.75;
+    animation:sigflicker 1.15s infinite ease-in-out;
+  }
+  .signal-bars span:nth-child(1){height:4px; animation-delay:0s;}
+  .signal-bars span:nth-child(2){height:7px; animation-delay:.12s;}
+  .signal-bars span:nth-child(3){height:11px; animation-delay:.24s;}
+  .signal-bars span:nth-child(4){height:6px; animation-delay:.36s;}
+  .signal-bars span:nth-child(5){height:9px; animation-delay:.48s;}
+  @keyframes sigflicker{
+    0%,100%{opacity:0.35; transform:scaleY(0.7);}
+    50%{opacity:1; transform:scaleY(1);}
+  }
+
+  /* HUD corner brackets */
+  .hud-frame{position:relative;}
+  .hud-corner{
+    position:absolute;
+    width:14px; height:14px;
+    pointer-events:none;
+    z-index:2;
+  }
+  .hud-corner.tl{top:-1px; left:-1px; border-top:2px solid var(--signal); border-left:2px solid var(--signal);}
+  .hud-corner.tr{top:-1px; right:-1px; border-top:2px solid var(--signal); border-right:2px solid var(--signal);}
+  .hud-corner.bl{bottom:-1px; left:-1px; border-bottom:2px solid var(--signal); border-left:2px solid var(--signal);}
+  .hud-corner.br{bottom:-1px; right:-1px; border-bottom:2px solid var(--signal); border-right:2px solid var(--signal);}
+  .result .hud-corner{border-color:var(--signal); opacity:0.7;}
+  .result.void-active .hud-corner{border-color:var(--blood);}
+
   h1{
     font-family:'Space Mono', monospace;
     font-weight:700;
@@ -316,6 +355,37 @@
     box-shadow:0 0 24px rgba(255,59,92,0.35);
   }
 
+  .scan-bar{
+    display:none;
+    margin-top:2px;
+  }
+  .scan-bar.active{display:block;}
+  .scan-label{
+    display:flex;
+    justify-content:space-between;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--signal);
+    margin-bottom:6px;
+  }
+  .scan-track{
+    height:3px;
+    background:var(--line);
+    overflow:hidden;
+    position:relative;
+  }
+  .scan-fill{
+    height:100%;
+    width:0%;
+    background:var(--signal);
+    box-shadow:0 0 8px rgba(57,255,136,0.7);
+    transition:width .08s linear;
+  }
+  .go.void-mode ~ .scan-bar .scan-label{color:var(--blood);}
+  .go.void-mode ~ .scan-bar .scan-fill{background:var(--blood); box-shadow:0 0 8px rgba(255,59,92,0.7);}
+
   /* result */
   .result{
     margin-top:44px;
@@ -521,13 +591,16 @@
 
   <header>
     <div class="brand">VOID<span>.exe</span></div>
-    <div class="status" id="clock"><span class="dot"></span>—</div>
+    <div class="status">
+      <div id="clock"><span class="dot"></span>—</div>
+      <div class="signal-bars"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
   </header>
 
   <h1>Genera un <em>punto casuale</em> nella realtà.</h1>
   <p class="lede">
-    Scegli una modalità, un raggio, autorizza la posizione. Nessun server,
-    nessun salvataggio remoto: tutto nasce ed esiste solo nel tuo browser.
+    Scegli una modalità, un raggio, autorizza la posizione, lascia che
+    l'entropia decida il resto.
   </p>
 
   <div class="warn">
@@ -537,7 +610,11 @@
     in zone che non conosci.
   </div>
 
-  <div class="controls">
+  <div class="controls hud-frame">
+    <span class="hud-corner tl"></span>
+    <span class="hud-corner tr"></span>
+    <span class="hud-corner bl"></span>
+    <span class="hud-corner br"></span>
 
     <div class="field">
       <label>Modalità</label>
@@ -578,9 +655,17 @@
     </div>
 
     <button class="go" id="goBtn" type="button" disabled>Materializza coordinate</button>
+    <div class="scan-bar" id="scanBar">
+      <div class="scan-label"><span>analisi segnale</span><span id="scanPct">0%</span></div>
+      <div class="scan-track"><div class="scan-fill" id="scanFill"></div></div>
+    </div>
   </div>
 
-  <div class="result" id="result">
+  <div class="result hud-frame" id="result">
+    <span class="hud-corner tl"></span>
+    <span class="hud-corner tr"></span>
+    <span class="hud-corner bl"></span>
+    <span class="hud-corner br"></span>
     <div class="result-head">
       <span>output</span>
       <span class="tag" id="attemptTag">tentativo 001</span>
@@ -624,8 +709,7 @@
   <footer>
     // il metodo: "casuale" sceglie un punto uniforme nel raggio. "attrattore" e<br>
     "vuoto" generano più candidati e usano un punteggio pseudocasuale come<br>
-    filtro — è intrattenimento, non uno strumento scientifico di rilevamento.<br>
-    // la cronologia resta salvata solo in questo browser, su questo dispositivo.
+    filtro — è intrattenimento, non uno strumento scientifico di rilevamento.
   </footer>
 
   <div class="signature" id="signature">
@@ -656,6 +740,9 @@
   const roBearing = document.getElementById('roBearing');
   const histList = document.getElementById('histList');
   const clearHist = document.getElementById('clearHist');
+  const scanBar = document.getElementById('scanBar');
+  const scanFill = document.getElementById('scanFill');
+  const scanPct = document.getElementById('scanPct');
 
   let origin = null;
   let attempts = 0;
@@ -806,8 +893,49 @@
     renderHistory();
   });
 
+  function randomFakeCoord(){
+    const a = (randomFloat(-90,90)).toFixed(6);
+    const b = (randomFloat(-180,180)).toFixed(6);
+    return `${a}, ${b}`;
+  }
+
   goBtn.addEventListener('click', () => {
-    if(!origin) return;
+    if(!origin || goBtn.disabled) return;
+    goBtn.disabled = true;
+    scanBar.classList.add('active');
+    result.classList.remove('show');
+
+    let pct = 0;
+    scanFill.style.width = '0%';
+    scanPct.textContent = '0%';
+    coordText.textContent = randomFakeCoord();
+    coordText.classList.remove('void-color');
+
+    const flickerInt = setInterval(() => {
+      coordText.textContent = randomFakeCoord();
+    }, 70);
+
+    const scanInt = setInterval(() => {
+      pct += Math.round(randomFloat(6, 16));
+      if(pct >= 100){
+        pct = 100;
+        clearInterval(scanInt);
+        clearInterval(flickerInt);
+        scanFill.style.width = '100%';
+        scanPct.textContent = '100%';
+        setTimeout(() => {
+          scanBar.classList.remove('active');
+          goBtn.disabled = false;
+          materialize();
+        }, 120);
+      } else {
+        scanFill.style.width = pct + '%';
+        scanPct.textContent = pct + '%';
+      }
+    }, 90);
+  });
+
+  function materialize(){
     attempts++;
     attemptTag.textContent = 'tentativo ' + String(attempts).padStart(3,'0');
 
@@ -838,6 +966,7 @@
     const point = best.point;
     const isVoid = mode === 'void';
 
+    result.classList.toggle('void-active', isVoid);
     coordText.textContent = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
     coordText.classList.toggle('void-color', isVoid);
     coordText.classList.remove('glitch');
@@ -861,7 +990,7 @@
     hist.unshift({ lat: point.lat, lng: point.lng, mode, score: best.score, ts: Date.now() });
     saveHistory(hist);
     renderHistory();
-  });
+  }
 
   // easter egg: la firma si rivela solo quando si scrolla fino in fondo
   const signature = document.getElementById('signature');
@@ -886,4 +1015,4 @@
 </script>
 
 </body>
-                                     </html>
+</html>
