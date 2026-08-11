@@ -492,6 +492,27 @@
     border-top:1px solid var(--line);
     padding-top:20px;
   }
+
+  .signature{
+    margin-top:40px;
+    text-align:center;
+    font-family:'Space Mono', monospace;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .6s ease, transform .6s ease;
+  }
+  .signature.show{opacity:1; transform:translateY(0);}
+  .signature .credit{
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--signal);
+  }
+  .signature .egg{
+    font-size:10px;
+    color:var(--ghost);
+    margin-top:6px;
+    letter-spacing:0.05em;
+  }
 </style>
 </head>
 <body>
@@ -606,6 +627,11 @@
     filtro — è intrattenimento, non uno strumento scientifico di rilevamento.<br>
     // la cronologia resta salvata solo in questo browser, su questo dispositivo.
   </footer>
+
+  <div class="signature" id="signature">
+    <div class="credit">fatto da Alessio Devietro</div>
+    <div class="egg">se stai leggendo questo, sei gay</div>
+  </div>
 
 </div>
 
@@ -837,6 +863,16 @@
     renderHistory();
   });
 
+  // easter egg: la firma si rivela solo quando si scrolla fino in fondo
+  const signature = document.getElementById('signature');
+  const revealSignature = () => {
+    const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 4;
+    if(scrolledToBottom) signature.classList.add('show');
+  };
+  window.addEventListener('scroll', revealSignature);
+  window.addEventListener('resize', revealSignature);
+  revealSignature();
+
   copyLink.addEventListener('click', (e) => {
     e.preventDefault();
     const c = copyLink.dataset.coords;
@@ -850,4 +886,4 @@
 </script>
 
 </body>
-</html>
+                                     </html>
