@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOID // randonauta</title>
+<title>VOID.EXE // randonauta</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
 
   :root{
     --void:#07090a;
     --void-2:#0e1214;
+    --void-3:#131a18;
     --signal:#39ff88;
     --signal-dim:#1c6b3f;
     --amber:#ff9d3d;
+    --blood:#ff3b5c;
     --line:#1c2224;
     --ghost:#5a6a66;
   }
@@ -33,7 +35,6 @@
       radial-gradient(circle at 80% 90%, rgba(255,157,61,0.04), transparent 40%);
   }
 
-  /* scanline texture */
   body::before{
     content:"";
     position:fixed; inset:0;
@@ -112,15 +113,27 @@
     font-size:15px;
     line-height:1.6;
     max-width:46ch;
-    margin-bottom:40px;
+    margin-bottom:32px;
   }
+
+  .warn{
+    border:1px solid var(--blood);
+    background:rgba(255,59,92,0.06);
+    padding:12px 14px;
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    color:#ffb3c0;
+    line-height:1.6;
+    margin-bottom:32px;
+  }
+  .warn b{color:var(--blood);}
 
   .controls{
     background:var(--void-2);
     border:1px solid var(--line);
     padding:24px;
     display:grid;
-    gap:20px;
+    gap:22px;
   }
 
   .field label{
@@ -132,6 +145,47 @@
     color:var(--ghost);
     margin-bottom:10px;
   }
+
+  /* mode selector */
+  .modes{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+  }
+  .mode-btn{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--void);
+    border:1px solid var(--line);
+    color:var(--ghost);
+    padding:12px 6px;
+    cursor:pointer;
+    text-align:center;
+    transition:all .15s ease;
+  }
+  .mode-btn small{
+    display:block;
+    font-family:'Inter', sans-serif;
+    font-size:9.5px;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--ghost);
+    margin-top:4px;
+    line-height:1.3;
+  }
+  .mode-btn.active{
+    border-color:var(--signal);
+    color:var(--signal);
+    box-shadow:0 0 14px rgba(57,255,136,0.15) inset;
+  }
+  .mode-btn.active small{color:#9fd8b8;}
+  .mode-btn[data-mode="void"].active{
+    border-color:var(--blood);
+    color:var(--blood);
+  }
+  .mode-btn[data-mode="void"].active small{color:#ff9fb2;}
 
   .radius-row{
     display:flex;
@@ -196,6 +250,41 @@
   }
   button:hover{border-color:var(--signal); color:var(--signal);}
 
+  .toggle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .toggle-row .lab{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ghost);
+  }
+  .switch{
+    width:38px; height:20px;
+    background:var(--void);
+    border:1px solid var(--line);
+    position:relative;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .switch::after{
+    content:"";
+    position:absolute;
+    top:2px; left:2px;
+    width:14px; height:14px;
+    background:var(--ghost);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .switch.on{border-color:var(--signal);}
+  .switch.on::after{
+    transform:translateX(18px);
+    background:var(--signal);
+    box-shadow:0 0 8px rgba(57,255,136,0.6);
+  }
+
   .go{
     width:100%;
     background:var(--signal);
@@ -205,7 +294,7 @@
     font-size:14px;
     padding:16px;
     letter-spacing:0.1em;
-    margin-top:6px;
+    margin-top:2px;
   }
   .go:hover{
     background:#5affa2;
@@ -216,6 +305,15 @@
     opacity:0.35;
     cursor:not-allowed;
     box-shadow:none;
+  }
+  .go.void-mode{
+    background:var(--blood);
+    border-color:var(--blood);
+    color:#1a0206;
+  }
+  .go.void-mode:hover{
+    background:#ff6b83;
+    box-shadow:0 0 24px rgba(255,59,92,0.35);
   }
 
   /* result */
@@ -246,7 +344,7 @@
   .result-head .tag{color:var(--amber);}
 
   .coords{
-    padding:28px 20px 10px;
+    padding:26px 20px 4px;
     text-align:center;
   }
   .coords .num{
@@ -255,6 +353,10 @@
     color:var(--signal);
     letter-spacing:0.02em;
     text-shadow:0 0 18px rgba(57,255,136,0.35);
+  }
+  .coords .num.void-color{
+    color:var(--blood);
+    text-shadow:0 0 18px rgba(255,59,92,0.35);
   }
   .coords .num.glitch{
     animation:glitch .25s steps(2,end) 3;
@@ -271,6 +373,32 @@
     font-family:'Space Mono', monospace;
     font-size:12px;
     color:var(--ghost);
+  }
+
+  .readout{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--line);
+    margin:20px 20px 0;
+    border:1px solid var(--line);
+  }
+  .readout .cell{
+    background:var(--void-3);
+    padding:12px 14px;
+  }
+  .readout .cell .k{
+    font-family:'Space Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ghost);
+    margin-bottom:4px;
+  }
+  .readout .cell .v{
+    font-family:'Space Mono', monospace;
+    font-size:14px;
+    color:#d7e8de;
   }
 
   .actions{
@@ -293,6 +421,68 @@
   }
   .actions a:hover{border-color:var(--signal); color:var(--signal);}
 
+  /* history */
+  .history{
+    margin-top:40px;
+  }
+  .history-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid var(--line);
+    padding-bottom:12px;
+    margin-bottom:4px;
+  }
+  .history-head .h-title{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ghost);
+  }
+  .clear-btn{
+    background:none;
+    border:none;
+    color:var(--ghost);
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .clear-btn:hover{color:var(--blood);}
+
+  .hist-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+  }
+  .hist-item:last-child{border-bottom:none;}
+  .hist-item .h-left{color:#c7d6cd;}
+  .hist-item .h-mode{
+    display:inline-block;
+    font-size:9px;
+    padding:2px 6px;
+    border:1px solid var(--line);
+    margin-right:8px;
+    color:var(--ghost);
+    text-transform:uppercase;
+  }
+  .hist-item .h-mode.attractor{color:var(--signal); border-color:var(--signal-dim);}
+  .hist-item .h-mode.void{color:var(--blood); border-color:#6b1c2c;}
+  .hist-item a{color:var(--ghost); text-decoration:none;}
+  .hist-item a:hover{color:var(--signal);}
+  .hist-empty{
+    color:var(--ghost);
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    padding:16px 0;
+  }
+
   footer{
     margin-top:56px;
     font-family:'Space Mono', monospace;
@@ -309,23 +499,52 @@
 <div class="wrap">
 
   <header>
-    <div class="brand">VOID<span>_</span>randonauta</div>
+    <div class="brand">VOID<span>.exe</span></div>
     <div class="status" id="clock"><span class="dot"></span>—</div>
   </header>
 
   <h1>Genera un <em>punto casuale</em> nella realtà.</h1>
   <p class="lede">
-    Scegli un raggio, autorizza la posizione, lascia che l'entropia decida.
-    Nessun server, nessun salvataggio: le coordinate nascono nel tuo browser.
+    Scegli una modalità, un raggio, autorizza la posizione. Nessun server,
+    nessun salvataggio remoto: tutto nasce ed esiste solo nel tuo browser.
   </p>
 
+  <div class="warn">
+    <b>Attenzione —</b> i punti possono cadere in proprietà private, zone isolate,
+    strade trafficate o luoghi non sicuri di notte. Verifica sempre dove ti porta
+    prima di andarci, non entrare in proprietà altrui, e non esplorare mai da soli
+    in zone che non conosci.
+  </div>
+
   <div class="controls">
+
+    <div class="field">
+      <label>Modalità</label>
+      <div class="modes">
+        <button class="mode-btn active" data-mode="random" type="button">
+          Casuale<small>puro rumore</small>
+        </button>
+        <button class="mode-btn" data-mode="attractor" type="button">
+          Attrattore<small>anomalia alta</small>
+        </button>
+        <button class="mode-btn" data-mode="void" type="button">
+          Vuoto<small>anomalia bassa</small>
+        </button>
+      </div>
+    </div>
 
     <div class="field">
       <label>Raggio di ricerca</label>
       <div class="radius-row">
         <input type="range" id="radius" min="100" max="20000" step="100" value="2000">
         <div class="radius-val" id="radiusVal">2.0 km</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="toggle-row">
+        <span class="lab">Suono materializzazione</span>
+        <div class="switch on" id="soundToggle"></div>
       </div>
     </div>
 
@@ -349,16 +568,43 @@
       <div class="num" id="coordText">—</div>
       <div class="dist" id="distText"></div>
     </div>
+    <div class="readout">
+      <div class="cell">
+        <div class="k">Modalità</div>
+        <div class="v" id="roMode">casuale</div>
+      </div>
+      <div class="cell">
+        <div class="k">Livello anomalia</div>
+        <div class="v" id="roAnomaly">—</div>
+      </div>
+      <div class="cell">
+        <div class="k">Candidati valutati</div>
+        <div class="v" id="roCandidates">1</div>
+      </div>
+      <div class="cell">
+        <div class="k">Rotta</div>
+        <div class="v" id="roBearing">—</div>
+      </div>
+    </div>
     <div class="actions">
       <a id="mapLink" href="#" target="_blank" rel="noopener">Apri in Google Maps</a>
       <a id="copyLink" href="#">Copia coordinate</a>
     </div>
   </div>
 
+  <div class="history">
+    <div class="history-head">
+      <span class="h-title">cronologia locale</span>
+      <button class="clear-btn" id="clearHist" type="button">cancella</button>
+    </div>
+    <div id="histList"><div class="hist-empty">nessuna materializzazione ancora salvata su questo dispositivo.</div></div>
+  </div>
+
   <footer>
-    // il metodo: viene scelto un angolo casuale (0–360°) e una distanza casuale entro il<br>
-    raggio impostato, poi proiettati sulla sfera terrestre a partire dalla tua posizione.<br>
-    // ricorda: esplora con buon senso, rispetta le proprietà private e la tua sicurezza.
+    // il metodo: "casuale" sceglie un punto uniforme nel raggio. "attrattore" e<br>
+    "vuoto" generano più candidati e usano un punteggio pseudocasuale come<br>
+    filtro — è intrattenimento, non uno strumento scientifico di rilevamento.<br>
+    // la cronologia resta salvata solo in questo browser, su questo dispositivo.
   </footer>
 
 </div>
@@ -376,9 +622,20 @@
   const copyLink = document.getElementById('copyLink');
   const attemptTag = document.getElementById('attemptTag');
   const clock = document.getElementById('clock');
+  const modeBtns = document.querySelectorAll('.mode-btn');
+  const soundToggle = document.getElementById('soundToggle');
+  const roMode = document.getElementById('roMode');
+  const roAnomaly = document.getElementById('roAnomaly');
+  const roCandidates = document.getElementById('roCandidates');
+  const roBearing = document.getElementById('roBearing');
+  const histList = document.getElementById('histList');
+  const clearHist = document.getElementById('clearHist');
 
   let origin = null;
   let attempts = 0;
+  let mode = 'random';
+  let soundOn = true;
+  const HIST_KEY = 'void_exe_history_v1';
 
   function fmtRadius(v){
     return v >= 1000 ? (v/1000).toFixed(1) + ' km' : v + ' m';
@@ -395,6 +652,20 @@
   }
   tickClock();
   setInterval(tickClock, 1000);
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      goBtn.classList.toggle('void-mode', mode === 'void');
+    });
+  });
+
+  soundToggle.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundToggle.classList.toggle('on', soundOn);
+  });
 
   locBtn.addEventListener('click', () => {
     if(!navigator.geolocation){
@@ -441,29 +712,129 @@
     return { lat: lat2 * 180 / Math.PI, lng: lng2 * 180 / Math.PI };
   }
 
+  function generateCandidate(maxR){
+    const bearing = randomFloat(0, 360);
+    const dist = Math.sqrt(randomFloat(0, 1)) * maxR;
+    return { bearing, dist };
+  }
+
+  // punteggio pseudocasuale "anomalia" 0-100, deterministico sulla coppia lat/lng
+  // ma seedato con un valore casuale per candidato: puro intrattenimento
+  function anomalyScore(lat, lng, seed){
+    const x = Math.sin(lat * 12.9898 + lng * 78.233 + seed * 43758.5453) * 43758.5453;
+    const frac = x - Math.floor(x);
+    return Math.round(frac * 100);
+  }
+
+  function playTone(kind){
+    if(!soundOn) return;
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = kind === 'void' ? 'sawtooth' : (kind === 'attractor' ? 'square' : 'sine');
+      const freqStart = kind === 'void' ? 180 : (kind === 'attractor' ? 520 : 380);
+      const freqEnd = kind === 'void' ? 60 : (kind === 'attractor' ? 900 : 380);
+      osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd,1), ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.42);
+    }catch(e){}
+  }
+
+  function loadHistory(){
+    try{
+      return JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    }catch(e){ return []; }
+  }
+  function saveHistory(list){
+    try{
+      localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0,12)));
+    }catch(e){}
+  }
+  function renderHistory(){
+    const list = loadHistory();
+    if(list.length === 0){
+      histList.innerHTML = '<div class="hist-empty">nessuna materializzazione ancora salvata su questo dispositivo.</div>';
+      return;
+    }
+    histList.innerHTML = list.map(item => `
+      <div class="hist-item">
+        <div class="h-left">
+          <span class="h-mode ${item.mode}">${item.mode === 'random' ? 'casuale' : item.mode === 'attractor' ? 'attrattore' : 'vuoto'}</span>
+          ${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}
+        </div>
+        <a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" rel="noopener">mappa →</a>
+      </div>
+    `).join('');
+  }
+  renderHistory();
+
+  clearHist.addEventListener('click', () => {
+    localStorage.removeItem(HIST_KEY);
+    renderHistory();
+  });
+
   goBtn.addEventListener('click', () => {
     if(!origin) return;
     attempts++;
     attemptTag.textContent = 'tentativo ' + String(attempts).padStart(3,'0');
 
     const maxR = parseInt(radius.value);
-    const bearing = randomFloat(0, 360);
-    // sqrt per distribuzione uniforme sull'area del cerchio
-    const dist = Math.sqrt(randomFloat(0, 1)) * maxR;
+    let best = null;
+    let candidateCount = 1;
 
-    const point = destinationPoint(origin.lat, origin.lng, dist, bearing);
+    if(mode === 'random'){
+      const c = generateCandidate(maxR);
+      const point = destinationPoint(origin.lat, origin.lng, c.dist, c.bearing);
+      best = { point, dist: c.dist, bearing: c.bearing, score: anomalyScore(point.lat, point.lng, 0) };
+    } else {
+      candidateCount = 6;
+      const candidates = [];
+      for(let i=0; i<candidateCount; i++){
+        const c = generateCandidate(maxR);
+        const point = destinationPoint(origin.lat, origin.lng, c.dist, c.bearing);
+        const score = anomalyScore(point.lat, point.lng, i + 1);
+        candidates.push({ point, dist: c.dist, bearing: c.bearing, score });
+      }
+      if(mode === 'attractor'){
+        best = candidates.reduce((a,b) => b.score > a.score ? b : a);
+      } else {
+        best = candidates.reduce((a,b) => b.score < a.score ? b : a);
+      }
+    }
+
+    const point = best.point;
+    const isVoid = mode === 'void';
 
     coordText.textContent = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
+    coordText.classList.toggle('void-color', isVoid);
     coordText.classList.remove('glitch');
     void coordText.offsetWidth;
     coordText.classList.add('glitch');
 
-    distText.textContent = `${Math.round(dist)} m dal punto di origine · rotta ${Math.round(bearing)}°`;
+    distText.textContent = `${Math.round(best.dist)} m dal punto di origine`;
+
+    roMode.textContent = mode === 'random' ? 'casuale' : mode === 'attractor' ? 'attrattore' : 'vuoto';
+    roAnomaly.textContent = best.score + ' / 100';
+    roCandidates.textContent = candidateCount;
+    roBearing.textContent = Math.round(best.bearing) + '°';
 
     mapLink.href = `https://www.google.com/maps?q=${point.lat},${point.lng}`;
     copyLink.dataset.coords = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
 
     result.classList.add('show');
+    playTone(mode);
+
+    const hist = loadHistory();
+    hist.unshift({ lat: point.lat, lng: point.lng, mode, score: best.score, ts: Date.now() });
+    saveHistory(hist);
+    renderHistory();
   });
 
   copyLink.addEventListener('click', (e) => {
