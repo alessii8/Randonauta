@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOID // randonauta</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --void:#07090a;
+    --void-2:#0e1214;
+    --signal:#39ff88;
+    --signal-dim:#1c6b3f;
+    --amber:#ff9d3d;
+    --line:#1c2224;
+    --ghost:#5a6a66;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html,body{
+    background:var(--void);
+    color:#e6efe9;
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  body{
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(57,255,136,0.05), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,157,61,0.04), transparent 40%);
+  }
+
+  /* scanline texture */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.015) 0px,
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+    z-index:50;
+  }
+
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+    position:relative;
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;
+    margin-bottom:36px;
+  }
+
+  .brand{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.18em;
+    color:var(--signal);
+    text-transform:uppercase;
+  }
+  .brand span{color:var(--ghost);}
+
+  .status{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ghost);
+    text-align:right;
+    line-height:1.6;
+  }
+  .status .dot{
+    display:inline-block;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--signal);
+    margin-right:6px;
+    box-shadow:0 0 6px var(--signal);
+    animation:pulse 1.8s infinite ease-in-out;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.25;}
+  }
+
+  h1{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:clamp(28px, 6vw, 42px);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin-bottom:14px;
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--signal);
+  }
+
+  .lede{
+    color:var(--ghost);
+    font-size:15px;
+    line-height:1.6;
+    max-width:46ch;
+    margin-bottom:40px;
+  }
+
+  .controls{
+    background:var(--void-2);
+    border:1px solid var(--line);
+    padding:24px;
+    display:grid;
+    gap:20px;
+  }
+
+  .field label{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ghost);
+    margin-bottom:10px;
+  }
+
+  .radius-row{
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  input[type="range"]{
+    flex:1;
+    -webkit-appearance:none;
+    height:2px;
+    background:var(--line);
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:14px; height:14px;
+    background:var(--signal);
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 0 10px rgba(57,255,136,0.6);
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:14px; height:14px;
+    background:var(--signal);
+    border:none;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 0 10px rgba(57,255,136,0.6);
+  }
+  .radius-val{
+    font-family:'Space Mono', monospace;
+    color:var(--signal);
+    font-size:14px;
+    min-width:64px;
+    text-align:right;
+  }
+
+  .loc-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .loc-text{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    color:#cfe0d6;
+  }
+  .loc-text.pending{color:var(--ghost);}
+
+  button{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--line);
+    color:#cfe0d6;
+    padding:9px 14px;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  button:hover{border-color:var(--signal); color:var(--signal);}
+
+  .go{
+    width:100%;
+    background:var(--signal);
+    border:1px solid var(--signal);
+    color:#04140a;
+    font-weight:700;
+    font-size:14px;
+    padding:16px;
+    letter-spacing:0.1em;
+    margin-top:6px;
+  }
+  .go:hover{
+    background:#5affa2;
+    color:#04140a;
+    box-shadow:0 0 24px rgba(57,255,136,0.35);
+  }
+  .go:disabled{
+    opacity:0.35;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+
+  /* result */
+  .result{
+    margin-top:44px;
+    border:1px solid var(--line);
+    background:var(--void-2);
+    padding:0;
+    opacity:0;
+    transform:translateY(8px);
+    transition:opacity .5s ease, transform .5s ease;
+    overflow:hidden;
+  }
+  .result.show{opacity:1; transform:translateY(0);}
+
+  .result-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ghost);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
+  .result-head .tag{color:var(--amber);}
+
+  .coords{
+    padding:28px 20px 10px;
+    text-align:center;
+  }
+  .coords .num{
+    font-family:'Space Mono', monospace;
+    font-size:clamp(20px, 5.5vw, 30px);
+    color:var(--signal);
+    letter-spacing:0.02em;
+    text-shadow:0 0 18px rgba(57,255,136,0.35);
+  }
+  .coords .num.glitch{
+    animation:glitch .25s steps(2,end) 3;
+  }
+  @keyframes glitch{
+    0%{ transform:translate(0,0); opacity:1;}
+    25%{ transform:translate(-1px,1px); opacity:0.7;}
+    50%{ transform:translate(1px,-1px); opacity:0.9;}
+    75%{ transform:translate(-1px,0); opacity:0.6;}
+    100%{ transform:translate(0,0); opacity:1;}
+  }
+  .coords .dist{
+    margin-top:10px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--ghost);
+  }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    padding:20px;
+  }
+  .actions a{
+    flex:1;
+    text-align:center;
+    text-decoration:none;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    border:1px solid var(--line);
+    color:#cfe0d6;
+    padding:12px;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .actions a:hover{border-color:var(--signal); color:var(--signal);}
+
+  footer{
+    margin-top:56px;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ghost);
+    line-height:1.7;
+    border-top:1px solid var(--line);
+    padding-top:20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand">VOID<span>_</span>randonauta</div>
+    <div class="status" id="clock"><span class="dot"></span>—</div>
+  </header>
+
+  <h1>Genera un <em>punto casuale</em> nella realtà.</h1>
+  <p class="lede">
+    Scegli un raggio, autorizza la posizione, lascia che l'entropia decida.
+    Nessun server, nessun salvataggio: le coordinate nascono nel tuo browser.
+  </p>
+
+  <div class="controls">
+
+    <div class="field">
+      <label>Raggio di ricerca</label>
+      <div class="radius-row">
+        <input type="range" id="radius" min="100" max="20000" step="100" value="2000">
+        <div class="radius-val" id="radiusVal">2.0 km</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Punto di origine</label>
+      <div class="loc-row">
+        <span class="loc-text pending" id="locText">posizione non ancora acquisita</span>
+        <button id="locBtn" type="button">Rileva posizione</button>
+      </div>
+    </div>
+
+    <button class="go" id="goBtn" type="button" disabled>Materializza coordinate</button>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-head">
+      <span>output</span>
+      <span class="tag" id="attemptTag">tentativo 001</span>
+    </div>
+    <div class="coords">
+      <div class="num" id="coordText">—</div>
+      <div class="dist" id="distText"></div>
+    </div>
+    <div class="actions">
+      <a id="mapLink" href="#" target="_blank" rel="noopener">Apri in Google Maps</a>
+      <a id="copyLink" href="#">Copia coordinate</a>
+    </div>
+  </div>
+
+  <footer>
+    // il metodo: viene scelto un angolo casuale (0–360°) e una distanza casuale entro il<br>
+    raggio impostato, poi proiettati sulla sfera terrestre a partire dalla tua posizione.<br>
+    // ricorda: esplora con buon senso, rispetta le proprietà private e la tua sicurezza.
+  </footer>
+
+</div>
+
+<script>
+  const radius = document.getElementById('radius');
+  const radiusVal = document.getElementById('radiusVal');
+  const locBtn = document.getElementById('locBtn');
+  const locText = document.getElementById('locText');
+  const goBtn = document.getElementById('goBtn');
+  const result = document.getElementById('result');
+  const coordText = document.getElementById('coordText');
+  const distText = document.getElementById('distText');
+  const mapLink = document.getElementById('mapLink');
+  const copyLink = document.getElementById('copyLink');
+  const attemptTag = document.getElementById('attemptTag');
+  const clock = document.getElementById('clock');
+
+  let origin = null;
+  let attempts = 0;
+
+  function fmtRadius(v){
+    return v >= 1000 ? (v/1000).toFixed(1) + ' km' : v + ' m';
+  }
+  radiusVal.textContent = fmtRadius(parseInt(radius.value));
+  radius.addEventListener('input', () => {
+    radiusVal.textContent = fmtRadius(parseInt(radius.value));
+  });
+
+  function tickClock(){
+    const now = new Date();
+    const t = now.toLocaleTimeString('it-IT', {hour12:false});
+    clock.innerHTML = '<span class="dot"></span>' + t;
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  locBtn.addEventListener('click', () => {
+    if(!navigator.geolocation){
+      locText.textContent = 'geolocalizzazione non supportata';
+      return;
+    }
+    locText.textContent = 'acquisizione in corso…';
+    locText.classList.add('pending');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        origin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        locText.textContent = `agganciata: ${origin.lat.toFixed(5)}, ${origin.lng.toFixed(5)}`;
+        locText.classList.remove('pending');
+        goBtn.disabled = false;
+      },
+      err => {
+        locText.textContent = 'accesso negato o non disponibile';
+        locText.classList.add('pending');
+      },
+      { enableHighAccuracy:true, timeout:10000 }
+    );
+  });
+
+  function randomFloat(min, max){
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    const r = buf[0] / 4294967295;
+    return min + r * (max - min);
+  }
+
+  function destinationPoint(lat, lng, distanceM, bearingDeg){
+    const R = 6371000;
+    const brng = bearingDeg * Math.PI / 180;
+    const lat1 = lat * Math.PI / 180;
+    const lng1 = lng * Math.PI / 180;
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(distanceM / R) +
+      Math.cos(lat1) * Math.sin(distanceM / R) * Math.cos(brng)
+    );
+    const lng2 = lng1 + Math.atan2(
+      Math.sin(brng) * Math.sin(distanceM / R) * Math.cos(lat1),
+      Math.cos(distanceM / R) - Math.sin(lat1) * Math.sin(lat2)
+    );
+    return { lat: lat2 * 180 / Math.PI, lng: lng2 * 180 / Math.PI };
+  }
+
+  goBtn.addEventListener('click', () => {
+    if(!origin) return;
+    attempts++;
+    attemptTag.textContent = 'tentativo ' + String(attempts).padStart(3,'0');
+
+    const maxR = parseInt(radius.value);
+    const bearing = randomFloat(0, 360);
+    // sqrt per distribuzione uniforme sull'area del cerchio
+    const dist = Math.sqrt(randomFloat(0, 1)) * maxR;
+
+    const point = destinationPoint(origin.lat, origin.lng, dist, bearing);
+
+    coordText.textContent = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
+    coordText.classList.remove('glitch');
+    void coordText.offsetWidth;
+    coordText.classList.add('glitch');
+
+    distText.textContent = `${Math.round(dist)} m dal punto di origine · rotta ${Math.round(bearing)}°`;
+
+    mapLink.href = `https://www.google.com/maps?q=${point.lat},${point.lng}`;
+    copyLink.dataset.coords = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
+
+    result.classList.add('show');
+  });
+
+  copyLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    const c = copyLink.dataset.coords;
+    if(!c) return;
+    navigator.clipboard.writeText(c).then(() => {
+      const old = copyLink.textContent;
+      copyLink.textContent = 'Copiato ✓';
+      setTimeout(() => copyLink.textContent = old, 1400);
+    });
+  });
+</script>
+
+</body>
+</html>
